@@ -5,10 +5,8 @@ import numpy as np
 import seaborn as sns
 import tensorflow as tf
 from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.utils.class_weight import compute_class_weight
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-
-from .model_factory import build_model
-from .preprocessing import apply_clahe
 
 from .model_factory import build_model
 from .preprocessing import apply_clahe
@@ -22,14 +20,15 @@ class BrainTumorTrainer:
         self.dataset_dir = dataset_dir
         self.img_size = img_size
         self.batch_size = batch_size
-        self.classes = sorted(os.listdir(os.path.join(dataset_dir)))
+        self.classes = sorted(os.listdir(dataset_dir))
         self.num_classes = len(self.classes)
         self.model = None
         self.history = None
+        self.val_gen = None
 
     def clahe_preprocessing(self, img):
         """Wrapper to use CLAHE with ImageDataGenerator."""
-        img_uint8 = (img.astype(np.uint8))
+        img_uint8 = img.astype(np.uint8)
         processed = apply_clahe(img_uint8)
         return processed.astype(np.float32)
 
@@ -37,7 +36,6 @@ class BrainTumorTrainer:
         """Prepare train and validation generators with augmentation."""
         train_datagen = ImageDataGenerator(
             preprocessing_function=self.clahe_preprocessing,
-            rescale=1.0/255,
             rotation_range=15,
             width_shift_range=0.1,
             height_shift_range=0.1,
@@ -65,28 +63,41 @@ class BrainTumorTrainer:
 
         return train_gen, val_gen
 
-    def train(self, epochs: int = 20):
+    def train(self, epochs: int = 30):
         """Trains the model with early stopping."""
         train_gen, val_gen = self.get_data_generators()
-        self.val_gen = val_gen # store it as an instance attribute
+        self.val_gen = val_gen
+
+        class_weights = compute_class_weight(
+            class_weight='balanced',
+            classes=np.arange(self.num_classes),
+            y=train_gen.classes
+        )
+        class_weight_dict = dict(enumerate(class_weights))
+
         self.model = build_model(self.num_classes)
 
         early_stopping = tf.keras.callbacks.EarlyStopping(
-            monitor='val_loss', patience=5, restore_best_weights=True
+            monitor='val_loss', patience=8, restore_best_weights=True
+        )
+        
+        reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
+            monitor='val_loss', factor=0.5, patience=3, min_lr=1e6, verbose=1
         )
 
         self.history = self.model.fit(
             train_gen,
             epochs=epochs,
             validation_data=val_gen,
-            callbacks=[early_stopping]
+            callbacks=[early_stopping, reduce_lr],
+            class_weight=class_weight_dict
         )
         return self.history
 
-    def evaluate(self, val_gen=None): # <- make the argument optional
+    def evaluate(self, val_gen=None):
         """Generates detailed metrics."""
-        val_gen = val_gen or self.val_gen # <- fall back to stored generator
-        val_gen.reset() # <- ensures generator starts from the beginning
+        val_gen = val_gen or self.val_gen
+        val_gen.reset()
         y_pred_probs = self.model.predict(val_gen)
         y_pred = np.argmax(y_pred_probs, axis=1)
         y_true = val_gen.classes
