@@ -1,140 +1,70 @@
 # Brain Tumor Classification System 🧠
 
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
-[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.0%2B-orange)](https://www.tensorflow.org/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.0%2B-red)](https://streamlit.io/)
+[![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://www.python.org/)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15%2B-orange)](https://www.tensorflow.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.30%2B-red)](https://streamlit.io/)
 
-A deep learning-based system for classifying brain tumors from MRI images. This project includes both the model training pipeline and a web interface for real-time classification.
+A modernized deep learning system for classifying brain tumors from MRI images using Transfer Learning (EfficientNetB0) and advanced preprocessing techniques.
 
-## Features
+## ✨ Key Features
 
-- Classification of four types of brain conditions:
-  - Glioma
-  - Meningioma
-  - Pituitary
-  - No Tumor
-- Interactive web interface built with Streamlit
-- Real-time image processing and classification
-- Detailed probability breakdown for each classification
-- Data augmentation for improved model robustness
-- Comprehensive evaluation metrics
+- **Advanced Model:** Leverages `EfficientNetB0` for superior feature extraction.
+- **Enhanced Contrast:** Uses **CLAHE** (Contrast Limited Adaptive Histogram Equalization) to improve MRI visibility.
+- **Robust Training:** Implements modern data augmentation and early stopping.
+- **Interactive UI:** A professional Streamlit dashboard with real-time feedback and Plotly visualizations.
+- **Reliability:** Comprehensive error handling and type hinting.
 
-## Project Structure
+## 📁 Project Structure
 
-```
-brain_tumor_classification/
-├── Training/                 # Training dataset directory
-├── train_model.py           # Model training script
-├── app.py                   # Streamlit web application
-├── brain_tumor_model.keras  # Trained model file
-└── requirements.txt         # Project dependencies
-```
-
-## Installation
-
-1. Clone the repository:
-
-```bash
-git clone https://github.com/wolflergf/Brain_Tumor.git
-cd Brain_Tumor
+```text
+Brain_Tumor/
+├── src/
+│   ├── model_factory.py    # Architecture definition (EfficientNetB0)
+│   ├── model_trainer.py    # Training pipeline and evaluation
+│   ├── predictor.py        # Inference logic
+│   └── preprocessing.py    # CLAHE and normalization
+├── utils/                  # Helper scripts
+├── app_v2.py               # Modern Streamlit interface
+├── brain_tumor_model.keras # Trained model weights
+└── requirements.txt        # Reproducible dependencies
 ```
 
-2. Install dependencies:
+## 🚀 Getting Started
+
+### 1. Installation
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Usage
+### 2. Training the Model
 
-### Training the Model
+To train the model with the modernized pipeline:
 
-To train the model on your own dataset:
+```python
+from src.model_trainer import BrainTumorTrainer
 
-1. Organize your dataset in the following structure:
-
-```
-Training/
-├── glioma/
-├── meningioma/
-├── pituitary/
-└── no_tumor/
+trainer = BrainTumorTrainer(dataset_dir="./brain_tumor_classification/Training")
+trainer.train(epochs=20)
+trainer.evaluate()
+trainer.save_model("brain_tumor_model.keras")
 ```
 
-2. Run the training script:
+### 3. Running the Web App
 
 ```bash
-python train_model.py
+streamlit run app_v2.py
 ```
 
-The script will:
+## 🧪 Methodology
 
-- Apply data augmentation
-- Train the CNN model
-- Generate performance metrics
-- Save the trained model
+- **Preprocessing:** MRI images are resized to 224x224, enhanced via CLAHE, and normalized to [0, 1].
+- **Transfer Learning:** The base `EfficientNetB0` (pre-trained on ImageNet) is frozen, with a custom GlobalAveragePooling and Dense head for the 4 target classes.
+- **Metrics:** Performance is tracked via Accuracy, Precision, Recall, and Confusion Matrices.
 
-### Running the Web Application
+## ⚠️ Disclaimer
 
-To start the web interface:
+This tool is intended for research and educational purposes. It is **not** a medical device. Always consult a qualified medical professional for clinical diagnosis.
 
-```bash
-streamlit run app.py
-```
-
-The application will be available at `http://localhost:8501`
-
-## Model Architecture
-
-The CNN architecture consists of:
-
-- 2 Convolutional layers with ReLU activation
-- 2 MaxPooling layers
-- Flatten layer
-- Dense layer with 128 units
-- Dropout layer (0.2)
-- Output layer with softmax activation
-
-## Performance Metrics
-
-The model is evaluated using:
-
-- Accuracy
-- Loss
-- Classification report
-- Training/validation curves
-
-## Dependencies
-
-- TensorFlow 2.x
-- Streamlit
-- NumPy
-- Pillow
-- scikit-learn
-- matplotlib
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Disclaimer
-
-This tool is intended to be used as a support system only and should not be used as the sole basis for medical diagnosis. Always consult qualified healthcare professionals for medical decisions.
-
-## Author
-
-- [wolflergf](https://github.com/wolflergf)
-
-## Acknowledgments
-
-- Dataset providers
-- TensorFlow and Streamlit communities
-- Contributors and testers
+---
+*Developed as part of an AI reliability enhancement initiative.*
