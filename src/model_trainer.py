@@ -1,12 +1,18 @@
 import os
-import numpy as np
-import tensorflow as tf
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from sklearn.metrics import classification_report, confusion_matrix
+
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
+import tensorflow as tf
+from sklearn.metrics import classification_report, confusion_matrix
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
 from .model_factory import build_model
 from .preprocessing import apply_clahe
+
+from .model_factory import build_model
+from .preprocessing import apply_clahe
+
 
 class BrainTumorTrainer:
     """
@@ -62,6 +68,7 @@ class BrainTumorTrainer:
     def train(self, epochs: int = 20):
         """Trains the model with early stopping."""
         train_gen, val_gen = self.get_data_generators()
+        self.val_gen = val_gen # store it as an instance attribute
         self.model = build_model(self.num_classes)
 
         early_stopping = tf.keras.callbacks.EarlyStopping(
@@ -76,8 +83,10 @@ class BrainTumorTrainer:
         )
         return self.history
 
-    def evaluate(self, val_gen):
+    def evaluate(self, val_gen=None): # <- make the argument optional
         """Generates detailed metrics."""
+        val_gen = val_gen or self.val_gen # <- fall back to stored generator
+        val_gen.reset() # <- ensures generator starts from the beginning
         y_pred_probs = self.model.predict(val_gen)
         y_pred = np.argmax(y_pred_probs, axis=1)
         y_true = val_gen.classes
